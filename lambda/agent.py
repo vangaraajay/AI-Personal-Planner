@@ -30,7 +30,7 @@ def get_tasks_from_dynamodb() -> str:
 
 #Helps other CRUD operations find the id given the name
 def find_task_id_by_name(task_name: str) -> str:
-    """Helper function to find task_id by task_name with case-insensitive matching."""
+    """Helper function to find task_id by task_name."""
     response = table.scan()
     items = response.get('Items', [])
     
@@ -107,7 +107,7 @@ llm = ChatBedrockConverse(
 
 # Create prompt template
 prompt = ChatPromptTemplate.from_messages([
-    ("system", "You are a helpful assistant"),
+    ("system", "You are an AI powered conversation planner. You will assist in adding tasks, deleting tasks, updating the status of tasks, and showing tasks to users."),
     ("human", "{input}"),
     ("placeholder", "{agent_scratchpad}")
 ])
