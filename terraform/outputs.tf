@@ -1,12 +1,12 @@
 # DynamoDB Table Outputs
 output "dynamodb_table_name" {
   description = "The name of the DynamoDB table used by the chatbot."
-  value       = aws_dynamodb_table.Tasks.name
+  value       = aws_dynamodb_table.tasks.name
 }
 
 output "dynamodb_table_arn" {
   description = "The ARN of the DynamoDB table."
-  value       = aws_dynamodb_table.Tasks.arn
+  value       = aws_dynamodb_table.tasks.arn
 }
 
 # IAM Role Outputs

@@ -1,13 +1,8 @@
-resource "aws_dynamodb_table" "Tasks" {
+resource "aws_dynamodb_table" "tasks" {
     name = "Tasks"
     billing_mode = "PAY_PER_REQUEST"
-    hash_key = "user_id"
-    range_key = "task_id"
+    hash_key = "task_id"
 
-    attribute {
-        name = "user_id"
-        type = "S"
-    }
     attribute {
         name = "task_id"
         type = "S"
@@ -57,7 +52,7 @@ resource "aws_iam_policy" "lambda_dynamodb_policy" {
           "dynamodb:Query"
         ]
         Effect   = "Allow"
-        Resource = aws_dynamodb_table.Tasks.arn
+        Resource = aws_dynamodb_table.tasks.arn
       }
     ]
   })
