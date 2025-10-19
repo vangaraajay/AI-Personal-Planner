@@ -13,6 +13,10 @@ resource "aws_dynamodb_table" "Tasks" {
         type = "S"
     }
 
+    server_side_encryption {
+      enabled = true
+    }
+
     tags = {
         Environment = "Database"
         Project = "AI Powered Planner Chatbot"
