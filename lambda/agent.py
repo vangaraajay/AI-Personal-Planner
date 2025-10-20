@@ -28,6 +28,15 @@ def get_tasks_from_dynamodb() -> str:
     except Exception as err:
         return f"Error getting tasks from DynamoDB: {str(err)}"
 
+#GET (but in array format)
+def get_tasks_from_dynamodb_array():
+    try:
+        response = table.scan()
+        tasks = response.get('Items', [])
+        return tasks
+    except Exception as err:
+        return f"Error getting tasks from DynamoDB: {str(err)}"
+
 #Helps other CRUD operations find the id given the name
 def find_task_id_by_name(task_name: str) -> str:
     """Helper function to find task_id by task_name."""
@@ -150,7 +159,7 @@ def lambda_handler(event, context):
             }
     elif event['resource'] == '/tasks' and event['httpMethod'] == 'GET':
         try:
-            tasks_result = get_tasks_from_dynamodb()
+            tasks_result = get_tasks_from_dynamodb_array()
             return {
                 'statusCode': 200,
                 'body': json.dumps(tasks_result)
