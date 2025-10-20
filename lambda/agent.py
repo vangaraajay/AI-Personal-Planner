@@ -118,6 +118,31 @@ agent = create_tool_calling_agent(llm, tools, prompt)
 agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
 
 # Make the call
+"""
+Test Code
 response = agent_executor.invoke({"input": "Add 1 and 1"})
 output = response['output']
 print(output)
+"""
+#Lambda Handler function
+def lambda_handler(event, context):
+    try:
+        # Parse the JSON string into a Python dictionary
+        event = json.loads(event['body'])
+        if not event['message']:
+            return {
+                'statusCode': 400,
+                'body': json.dumps('Input was not given')
+            }
+        response = agent_executor.invoke({"input": event['message']})
+        output = response['output']
+        return {
+            'statusCode': 200,
+            'body': json.dumps(output)
+        }
+    except Exception as err:
+        return {
+            'statusCode': 500,
+            'body': json.dumps(str(err))
+        }
+
