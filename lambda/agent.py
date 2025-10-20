@@ -1,6 +1,7 @@
 import uuid
 import boto3
 import json
+import re
 from datetime import datetime
 from langchain_aws import ChatBedrockConverse
 from langchain_core.tools import tool
@@ -10,6 +11,26 @@ from langchain_core.prompts import ChatPromptTemplate
 # Initialize DynamoDB
 dynamodb = boto3.resource('dynamodb')
 table = dynamodb.Table('Tasks')  # Replace 'tasks' with your actual table name
+
+# Function for input validation (makes sure to protect against injection attacks and etc.)
+def validate_input(message):
+    """Validate and sanitize user input to prevent injection attacks."""
+    if not message or not isinstance(message, str):
+        return None, "Message must be a non-empty string"
+    
+    # Length validation
+    if len(message) > 1000:
+        return None, "Message too long (max 1000 characters)"
+    
+    # Remove HTML/XML tags and script content
+    message = re.sub(r'<[^>]*>', '', message)
+    # Remove excessive whitespace
+    message = re.sub(r'\s+', ' ', message.strip())
+    
+    if not message:
+        return None, "Message cannot be empty after sanitization"
+    
+    return message, None
 
 #GET
 @tool
@@ -141,12 +162,18 @@ def lambda_handler(event, context):
         try:
             # Parse the JSON string into a Python dictionary
             body = json.loads(event['body'])
-            if not body['message']:
+            
+            # Validate input
+            raw_message = body.get('message', '')
+            clean_message, error = validate_input(raw_message)
+            
+            if error:
                 return {
                     'statusCode': 400,
-                    'body': json.dumps('Input was not given')
+                    'body': json.dumps(error)
                 }
-            response = agent_executor.invoke({"input": body['message']})
+            
+            response = agent_executor.invoke({"input": clean_message})
             output = response['output']
             return {
                 'statusCode': 200,

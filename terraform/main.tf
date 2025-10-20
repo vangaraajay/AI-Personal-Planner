@@ -70,10 +70,28 @@ resource "aws_iam_role_policy_attachment" "lambda_custom_dynamodb" {
   policy_arn = aws_iam_policy.lambda_dynamodb_policy.arn
 }
 
-//Bedrock Access
+//Bedrock Limited Access
+resource "aws_iam_policy" "lambda_bedrock_policy" {
+  name        = "lambda-bedrock-limited-policy"
+  description = "Allow Lambda to access only Claude Haiku model"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "bedrock:InvokeModel"
+        ]
+        Resource = "arn:aws:bedrock:*::foundation-model/anthropic.claude-3-haiku-20240307-v1:0"
+      }
+    ]
+  })
+}
+
 resource "aws_iam_role_policy_attachment" "lambda_bedrock" {
   role       = aws_iam_role.lambda_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonBedrockFullAccess"
+  policy_arn = aws_iam_policy.lambda_bedrock_policy.arn
 }
 
 //Creating Lambda Function
@@ -123,6 +141,51 @@ resource "aws_api_gateway_method" "chat_method" {
   resource_id   = aws_api_gateway_resource.chat_resource.id
   http_method   = "POST"
   authorization = "NONE"
+  api_key_required = true
+}
+
+resource "aws_api_gateway_method" "chat_options" {
+  rest_api_id   = aws_api_gateway_rest_api.chatbot_api.id
+  resource_id   = aws_api_gateway_resource.chat_resource.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "chat_options_integration" {
+  rest_api_id = aws_api_gateway_rest_api.chatbot_api.id
+  resource_id = aws_api_gateway_resource.chat_resource.id
+  http_method = aws_api_gateway_method.chat_options.http_method
+  type        = "MOCK"
+  
+  request_templates = {
+    "application/json" = "{\"statusCode\": 200}"
+  }
+}
+
+resource "aws_api_gateway_method_response" "chat_options_response" {
+  rest_api_id = aws_api_gateway_rest_api.chatbot_api.id
+  resource_id = aws_api_gateway_resource.chat_resource.id
+  http_method = aws_api_gateway_method.chat_options.http_method
+  status_code = "200"
+  
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "chat_options_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.chatbot_api.id
+  resource_id = aws_api_gateway_resource.chat_resource.id
+  http_method = aws_api_gateway_method.chat_options.http_method
+  status_code = aws_api_gateway_method_response.chat_options_response.status_code
+  
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
 }
 
 resource "aws_api_gateway_integration" "lambda_integration" {
@@ -146,6 +209,7 @@ resource "aws_api_gateway_method" "tasks_method" {
   resource_id   = aws_api_gateway_resource.tasks_resource.id
   http_method   = "GET"
   authorization = "NONE"
+  api_key_required = true
 }
 
 resource "aws_api_gateway_integration" "tasks_integration" {
@@ -172,6 +236,31 @@ resource "aws_api_gateway_stage" "prod" {
   stage_name    = "prod"
 }
 
+//API Key Setup
+resource "aws_api_gateway_api_key" "chatbot_key" {
+  name = "chatbot-api-key"
+}
+
+resource "aws_api_gateway_usage_plan" "chatbot_plan" {
+  name = "chatbot-usage-plan"
+  
+  throttle_settings {
+    rate_limit  = 100
+    burst_limit = 200
+  }
+  
+  api_stages {
+    api_id = aws_api_gateway_rest_api.chatbot_api.id
+    stage  = aws_api_gateway_stage.prod.stage_name
+  }
+}
+
+resource "aws_api_gateway_usage_plan_key" "chatbot_plan_key" {
+  key_id        = aws_api_gateway_api_key.chatbot_key.id
+  key_type      = "API_KEY"
+  usage_plan_id = aws_api_gateway_usage_plan.chatbot_plan.id
+}
+
 //Frontend Hosting
 resource "random_string" "bucket_suffix" {
   length  = 8
@@ -181,6 +270,16 @@ resource "random_string" "bucket_suffix" {
 
 resource "aws_s3_bucket" "frontend" {
   bucket = "chatbot-frontend-${random_string.bucket_suffix.result}"
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "frontend" {
+  bucket = aws_s3_bucket.frontend.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
 }
 
 resource "aws_s3_bucket_website_configuration" "frontend" {

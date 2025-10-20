@@ -15,6 +15,7 @@ function App() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-API-Key': process.env.REACT_APP_API_KEY,
         },
         body: JSON.stringify({
           message: agentMessage
@@ -38,6 +39,7 @@ function App() {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'X-API-Key': process.env.REACT_APP_API_KEY,
         }
       })
       
