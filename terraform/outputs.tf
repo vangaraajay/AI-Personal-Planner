@@ -36,6 +36,12 @@ output "lambda_invoke_arn" {
   value       = aws_lambda_function.chatbot_lambda.invoke_arn
 }
 
+# API Gateway Outputs
+output "api_gateway_url" {
+  description = "The base URL of the API Gateway."
+  value       = aws_api_gateway_stage.prod.invoke_url
+}
+
 # Useful Project Metadata
 output "project_name" {
   description = "Project identifier tag."

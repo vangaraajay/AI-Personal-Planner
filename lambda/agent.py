@@ -124,25 +124,45 @@ response = agent_executor.invoke({"input": "Add 1 and 1"})
 output = response['output']
 print(output)
 """
+
+
 #Lambda Handler function
 def lambda_handler(event, context):
-    try:
-        # Parse the JSON string into a Python dictionary
-        event = json.loads(event['body'])
-        if not event['message']:
+    if event['resource'] == '/chat' and event['httpMethod'] == 'POST':
+        try:
+            # Parse the JSON string into a Python dictionary
+            body = json.loads(event['body'])
+            if not body['message']:
+                return {
+                    'statusCode': 400,
+                    'body': json.dumps('Input was not given')
+                }
+            response = agent_executor.invoke({"input": body['message']})
+            output = response['output']
             return {
-                'statusCode': 400,
-                'body': json.dumps('Input was not given')
+                'statusCode': 200,
+                'body': json.dumps(output)
             }
-        response = agent_executor.invoke({"input": event['message']})
-        output = response['output']
-        return {
-            'statusCode': 200,
-            'body': json.dumps(output)
-        }
-    except Exception as err:
-        return {
-            'statusCode': 500,
-            'body': json.dumps(str(err))
+        except Exception as err:
+            return {
+                'statusCode': 500,
+                'body': json.dumps(str(err))
+            }
+    elif event['resource'] == '/tasks' and event['httpMethod'] == 'GET':
+        try:
+            tasks_result = get_tasks_from_dynamodb()
+            return {
+                'statusCode': 200,
+                'body': json.dumps(tasks_result)
+            }
+        except Exception as err:
+            return {
+                'statusCode': 500,
+                'body': json.dumps(str(err))
+            }
+    else:
+        return{
+            "statusCode": 404,
+            'body': json.dumps('No path available')
         }
 
