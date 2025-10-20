@@ -42,6 +42,17 @@ output "api_gateway_url" {
   value       = aws_api_gateway_stage.prod.invoke_url
 }
 
+# Frontend Hosting Outputs
+output "frontend_url" {
+  description = "The CloudFront URL for the frontend"
+  value       = "https://${aws_cloudfront_distribution.frontend.domain_name}"
+}
+
+output "s3_bucket_name" {
+  description = "The S3 bucket name for uploading files"
+  value       = aws_s3_bucket.frontend.bucket
+}
+
 # Useful Project Metadata
 output "project_name" {
   description = "Project identifier tag."
