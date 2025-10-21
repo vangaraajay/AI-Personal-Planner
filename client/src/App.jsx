@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './App.css'
 
 function App() {
@@ -23,7 +23,7 @@ function App() {
       })
       
       const data = await res.json()
-      setChatReply(data.response)
+      setChatReply(data)
 
       // Refresh tasks after chat interaction
       await apiCallToTasks()
@@ -51,7 +51,9 @@ function App() {
     }
   }
 
-  
+  useEffect(() => {
+    apiCallToTasks()
+  }, [])
 
   return (
     <>
