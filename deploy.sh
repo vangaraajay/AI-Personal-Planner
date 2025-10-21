@@ -7,7 +7,7 @@ echo "🚀 Starting AI Personal Planner deployment..."
 # Step 1: Create Lambda deployment package
 echo "📦 Creating Lambda deployment package..."
 cd lambda
-pip install -r requirements.txt -t .
+pip3 install -r requirements.txt -t .
 zip -r ../terraform/lambda.zip . -x "*.pyc" "__pycache__/*"
 cd ..
 
