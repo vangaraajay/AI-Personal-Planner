@@ -26,8 +26,8 @@ FRONTEND_URL=$(terraform output -raw frontend_url)
 
 cd ../client
 cat > .env << EOF
-REACT_APP_API_URL=${API_URL}
-REACT_APP_API_KEY=${API_KEY}
+VITE_API_URL=${API_URL}
+VITE_API_KEY=${API_KEY}
 EOF
 
 # Step 4: Build and upload frontend

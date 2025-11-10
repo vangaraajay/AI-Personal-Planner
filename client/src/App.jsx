@@ -11,11 +11,11 @@ function App() {
     e.preventDefault()
     
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/chat`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-API-Key': process.env.REACT_APP_API_KEY,
+          'X-API-Key': import.meta.env.VITE_API_KEY,
         },
         body: JSON.stringify({
           message: agentMessage
@@ -35,11 +35,11 @@ function App() {
   //API call to get tasks as an array
   const apiCallToTasks = async () => {
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/tasks`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/tasks`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'X-API-Key': process.env.REACT_APP_API_KEY,
+          'X-API-Key': import.meta.env.VITE_API_KEY,
         }
       })
       

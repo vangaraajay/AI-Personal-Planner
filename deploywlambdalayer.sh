@@ -46,8 +46,8 @@ S3_BUCKET=$(terraform output -raw s3_bucket_name)
 cd ../client
 
 cat > .env << EOF
-REACT_APP_API_URL=${API_URL}
-REACT_APP_API_KEY=${API_KEY}
+VITE_API_URL=${API_URL}
+VITE_API_KEY=${API_KEY}
 EOF
 
 # --- STEP 5: Build and upload frontend ---

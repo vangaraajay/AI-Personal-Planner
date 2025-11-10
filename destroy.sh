@@ -29,8 +29,8 @@ find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 echo "Resetting environment file..."
 cd ../client
 cat > .env << EOF
-REACT_APP_API_URL=YOUR_API_GATEWAY_URL_HERE
-REACT_APP_API_KEY=YOUR_API_KEY_HERE
+VITE_API_URL=YOUR_API_GATEWAY_URL_HERE
+VITE_API_KEY=YOUR_API_KEY_HERE
 EOF
 
 cd ..
