@@ -99,7 +99,9 @@ resource "aws_lambda_function" "chatbot_lambda" {
   function_name = "Agent-Code"
   runtime       = "python3.11"  # Python runtime
   handler       = "agent.lambda_handler"
-  filename      = "lambda.zip"
+  # Use S3-hosted deployment package to avoid request size limits
+  s3_bucket     = aws_s3_bucket.lambda_code.bucket
+  s3_key        = "lambda.zip"
   role          = aws_iam_role.lambda_role.arn
   timeout       = 60
   memory_size   = 512
@@ -280,6 +282,24 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "frontend" {
       sse_algorithm = "AES256"
     }
   }
+}
+
+// Bucket to store Lambda deployment package (zip)
+resource "random_string" "lambda_code_suffix" {
+  length  = 8
+  special = false
+  upper   = false
+}
+
+resource "aws_s3_bucket" "lambda_code" {
+  bucket = "chatbot-lambda-code-${random_string.lambda_code_suffix.result}"
+}
+
+resource "aws_s3_object" "lambda_zip" {
+  bucket       = aws_s3_bucket.lambda_code.bucket
+  key          = "lambda.zip"
+  source       = "lambda.zip"
+  content_type = "application/zip"
 }
 
 resource "aws_cloudfront_origin_access_control" "frontend" {

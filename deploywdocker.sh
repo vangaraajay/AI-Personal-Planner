@@ -9,26 +9,34 @@ LAMBDA_DIR="lambda"
 TERRAFORM_DIR="terraform"
 ZIP_PATH="${TERRAFORM_DIR}/lambda.zip"
 REQUIREMENTS_FILE="${LAMBDA_DIR}/requirements.txt"
-REGION="us-east-1"             # <-- change if your AWS region differs
+REGION="us-east-2"            
 
 # --- STEP 1: Clean old build ---
 echo "🧹 Cleaning previous builds..."
 rm -f ${ZIP_PATH}
 
 # --- STEP 2: Build Lambda dependencies in Amazon Linux (Docker) ---
-echo "📦 Building Lambda deployment package in Amazon Linux..."
-docker run --rm \
-  -v "$(pwd)":/app \
-  -w /app/${LAMBDA_DIR} \
-  amazonlinux:2 \
-  /bin/bash -c "
-    yum install -y python3 python3-pip zip > /dev/null &&
-    pip3 install --upgrade pip &&
-    pip3 install -r ${REQUIREMENTS_FILE} -t . &&
-    zip -r9 /app/${ZIP_PATH} . -x '*.pyc' '__pycache__/*'
-  "
+echo "📦 Building Lambda deployment package in Amazon Linux (packaging lambda/)..."
 
-echo "✅ Lambda deployment package created at ${ZIP_PATH}"
+# remove any previous build output
+rm -rf ./lambda/build_lambda
+mkdir -p ./lambda/build_lambda
+
+# copy lambda source files into build folder
+cp ./lambda/*.py ./lambda/build_lambda/ 2>/dev/null || true
+cp -r ./lambda/handlers ./lambda/build_lambda/ 2>/dev/null || true
+
+# Install dependencies into build folder using the official Lambda Python image
+docker run --rm -v $(pwd):/var/task --platform linux/amd64 --entrypoint bash public.ecr.aws/lambda/python:${PY_VERSION} -c "
+    python3 -m pip install --upgrade pip && \
+    python3 -m pip install --target /var/task/lambda/build_lambda -r /var/task/lambda/requirements.txt
+"
+
+# create a zip of the build contents and move it to the Terraform folder
+cd ./lambda/build_lambda
+zip -r ../../lambda_build.zip ./*
+mv ../../lambda_build.zip ../..//${ZIP_PATH}
+cd -
 
 # --- STEP 3: Deploy Terraform infrastructure ---
 echo "🏗️ Deploying infrastructure with Terraform..."

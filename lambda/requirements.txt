@@ -1,3 +1,4 @@
+numpy<2
 boto3
 langchain-aws
 langchain-core
