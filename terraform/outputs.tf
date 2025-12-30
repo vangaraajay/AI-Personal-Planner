@@ -56,8 +56,8 @@ output "s3_bucket_name" {
 # API Key Output
 output "api_key" {
   description = "The API key for accessing the endpoints"
-  value       = aws_api_gateway_api_key.chatbot_key.value
-  sensitive   = true
+  value     = aws_api_gateway_api_key.key.value
+  sensitive = true
 }
 
 # Useful Project Metadata
