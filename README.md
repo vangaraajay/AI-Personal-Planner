@@ -1,6 +1,4 @@
 # AI Personal Planner
-(Note: This README was made with AI)
-
 An AI-powered task management application that allows users to manage their personal tasks through natural language conversations using Amazon Bedrock's Claude AI.
 
 ## What's Next
